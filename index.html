@@ -6,25 +6,81 @@
             display: flex;
             flex-direction: column;
         }
-        .container *{
+
+        .container * {
             margin: 15px;
+        }
+    </style>
+    <style>
+        #progress_bar {
+            margin: 10px 0;
+            padding: 3px;
+            border: 1px solid #000;
+            font-size: 14px;
+            clear: both;
+            opacity: 0;
+            -moz-transition: opacity 1s linear;
+            -o-transition: opacity 1s linear;
+            -webkit-transition: opacity 1s linear;
+        }
+
+        #progress_bar.loading {
+            opacity: 1.0;
+        }
+
+        #progress_bar .percent {
+            background-color: #99ccff;
+            height: auto;
+            width: 0;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <input type="text" id="apikey">
-    <input type="file" id="file">
-    <input type="button" id="submit" value="submit">
-    <span>Result: </span>
-    <div>
 
-    </div>
+    <label for="url">url:</label>
+    <input type="text" id="url" value="https://05k124ubwi.execute-api.eu-west-1.amazonaws.com/prodStage">
+
+    <label for="apiKey">api key:</label>
+    <input type="text" id="apiKey" value="">
+
+    <label for="file">audio file:</label>
+    <input type="file" id="file">
+
+    <input type="button" id="submit" value="submit" onclick="send()">
+
+    <label for="result">Result: </label>
+    <div id="result"></div>
 </div>
+
 <script>
 
+    async function send() {
+        let baseUrl = document.querySelector('#url').value;
+        let apiKey = document.querySelector('#apiKey').value;
 
+        let file = document.getElementById('file').files[0];
+        console.log(file);
+        let reader = new FileReader();
+
+        let readPromise = (reader) => new Promise((resolve) => {
+            reader.onload = (event) => resolve(event)
+        });
+        let eventPromise = readPromise(reader);
+
+        reader.readAsDataURL(file);
+        let {target:{result}} =await eventPromise;
+
+        return fetch(`${baseUrl}/aws/audio`, {
+            method: "POST",
+            body: result.split(",").pop(),
+            headers: {
+                "X-Api-Key": apiKey
+            }
+
+        });
+    }
 
 </script>
 </body>
