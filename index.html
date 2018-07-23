@@ -70,16 +70,31 @@
         let eventPromise = readPromise(reader);
 
         reader.readAsDataURL(file);
-        let {target:{result}} =await eventPromise;
+        let {target: {result}} = await eventPromise;
 
-        return fetch(`${baseUrl}/aws/audio`, {
+        let pid = await fetch(`${baseUrl}/aws/audio`, {
             method: "POST",
             body: result.split(",").pop(),
             headers: {
                 "X-Api-Key": apiKey
             }
+        }).then(e => e.headers.get('X-S2T-PID'));
+        console.log(pid);
+        let intervalId = setInterval(async () => {
+            let vtt = await fetch(`${baseUrl}/aws/transcription`, {
+                method: "GET",
+                headers: {
+                    "X-Api-Key": apiKey,
+                    "X-S2T-PID": pid
+                }
+            }).then(r => r.text());
 
-        });
+            console.log(vtt);
+            if (vtt.startsWith("WEBVTT")) {
+                clearInterval(intervalId);
+                document.querySelector('#result').innerText = vtt;
+            }
+        }, 10000)
     }
 
 </script>
